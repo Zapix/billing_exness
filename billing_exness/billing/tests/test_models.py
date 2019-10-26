@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import pytest
 from decimal import Decimal
 
-from .factories import ExchangeRateFactory, WalletFactory
+import pytest
+from django.db.models import QuerySet
+
+from .factories import ExchangeRateFactory, WalletFactory, TransactionFactory
 from ..models import ExchangeRate
 from ..constants import USD, CAD, EUR
 
@@ -109,3 +111,25 @@ class TestWallet:
         )
 
         assert wallet.amount_in(CAD) == Decimal("200")
+
+    def test_transactions_hasnt_been_prefetched(self):
+        first_wallet = WalletFactory.create()
+        second_wallet = WalletFactory.create()
+
+        TransactionFactory.create_batch(
+            15,
+            from_wallet=first_wallet,
+            to_wallet=second_wallet,
+        )
+        TransactionFactory.create_batch(
+            5,
+            from_wallet=second_wallet,
+            to_wallet=first_wallet
+        )
+        TransactionFactory.create_batch(
+            4,
+            to_wallet=first_wallet
+        )
+
+        assert isinstance(first_wallet.transactions, QuerySet)
+        assert first_wallet.transactions.count() == 24

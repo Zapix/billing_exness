@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.db.models import Q
 from django.core.validators import MinValueValidator
 from django.contrib.auth import get_user_model
 from model_utils import Choices
@@ -105,3 +106,41 @@ class Wallet(TimeStampedModel):
         """
         rate = ExchangeRate.get(self.currency, to_currency)
         return self.amount * rate
+
+    @property
+    def transactions(self) -> models.QuerySet:
+        """
+        Checks has transactions been prefetched to `_transactions` model
+        if yes return them. Else get from db
+        :return:
+        """
+        if not hasattr(self, '_transactions'):
+            self._transactions = Transaction.objects.filter(
+                Q(from_wallet__pk=self.pk) |
+                Q(to_wallet__pk=self.pk)
+            )
+        return self._transactions
+
+
+class Transaction(TimeStampedModel):
+    """
+    Stores info about transactions that has been proceed
+    """
+    CURRENCIES = Choices(*CURRENCIES)
+    from_wallet = models.ForeignKey(
+        Wallet,
+        related_name='outgoing_transactions',
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+    )
+    to_wallet = models.ForeignKey(
+        Wallet,
+        related_name='incoming_transactions',
+        on_delete=models.PROTECT,
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    currency = StatusField(choices_name='CURRENCIES')
