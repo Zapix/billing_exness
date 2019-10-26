@@ -7,6 +7,7 @@ from ..constants import CURRENCIES, EXCHANGE_CURRENCIES
 from ..models import (
     ExchangeRate,
     Wallet,
+    Transaction
 )
 
 
@@ -26,3 +27,14 @@ class WalletFactory(DjangoModelFactory):
 
     class Meta:
         model = Wallet
+
+
+class TransactionFactory(DjangoModelFactory):
+    from_wallet = SubFactory(WalletFactory)
+    to_wallet = SubFactory(WalletFactory)
+
+    amount = fuzzy.FuzzyDecimal(low=0.1, high=1000000)
+    currency = fuzzy.FuzzyChoice(CURRENCIES)
+
+    class Meta:
+        model = Transaction
