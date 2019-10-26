@@ -2,7 +2,7 @@
 import pytest
 from decimal import Decimal
 
-from .factories import ExchangeRateFactory
+from .factories import ExchangeRateFactory, WalletFactory
 from ..models import ExchangeRate
 from ..constants import USD, CAD, EUR
 
@@ -60,3 +60,65 @@ def test_get_cad_to_eur():
     ExchangeRateFactory.create(rate=Decimal("3"), currency=EUR)
 
     assert ExchangeRate.get(CAD, EUR) == Decimal("1.5")
+
+
+@pytest.mark.watch
+def test_amount_usd_in_usd():
+    wallet = WalletFactory.create(currency=USD)
+    assert wallet.amount == wallet.amount_in(USD)
+
+
+@pytest.mark.watch
+def test_amount_eur_in_eur():
+    wallet = WalletFactory.create(currency=EUR)
+    ExchangeRateFactory.create(
+        rate=Decimal("2"),
+        currency=EUR
+    )
+    assert wallet.amount == wallet.amount_in(EUR)
+
+
+@pytest.mark.watch
+def test_amount_usd_in_eur():
+    wallet = WalletFactory.create(
+        amount=Decimal("100"),
+        currency=USD
+    )
+    ExchangeRateFactory.create(
+        rate=Decimal("2"),
+        currency=EUR
+    )
+
+    assert wallet.amount_in(EUR) == Decimal("200")
+
+
+@pytest.mark.watch
+def test_amount_eur_in_usd():
+    wallet = WalletFactory.create(
+        amount=Decimal("100"),
+        currency=EUR,
+    )
+    ExchangeRateFactory.create(
+        rate=Decimal("2"),
+        currency=EUR
+    )
+
+    assert wallet.amount_in(USD) == Decimal("50")
+
+
+@pytest.mark.watch
+def test_amount_eur_in_cad():
+    wallet = WalletFactory.create(
+        amount=Decimal("100"),
+        currency=EUR,
+    )
+    ExchangeRateFactory.create(
+        rate=Decimal("2"),
+        currency=EUR
+    )
+    ExchangeRateFactory.create(
+        rate=Decimal("4"),
+        currency=CAD
+    )
+
+    assert wallet.amount_in(CAD) == Decimal("200")

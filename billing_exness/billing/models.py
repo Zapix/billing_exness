@@ -1,6 +1,8 @@
 from decimal import Decimal
 
 from django.db import models
+from django.core.validators import MinValueValidator
+from django.contrib.auth import get_user_model
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from model_utils.fields import StatusField
@@ -23,7 +25,8 @@ class ExchangeRate(TimeStampedModel):
 
     rate = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))]
     )
     currency = StatusField(choices_name='EXCHANGE_CURRENCIES')
 
@@ -68,3 +71,37 @@ class ExchangeRate(TimeStampedModel):
         to_rate = cls.of(to_currency)
 
         return to_rate / from_rate
+
+
+class Wallet(TimeStampedModel):
+    """
+    Wallet for user. User could have one wallet with one currency
+    Stores amount of wallet
+    """
+    CURRENCIES = Choices(*CURRENCIES)
+
+    user = models.OneToOneField(
+        get_user_model(),
+        on_delete=models.CASCADE,
+    )
+
+    currency = StatusField(choices_name='CURRENCIES')
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))]
+    )
+
+    def amount_in(self, to_currency: str) -> Decimal:
+        """
+        Get's amount of wallet in different currencies.
+        Params:
+            to_params - currencies
+        Raises:
+            AssertionError - when wrong currency has been passed
+            ValueError - when rates hasn`t been set
+        Returns:
+            Decimal - amount in selected currency
+        """
+        rate = ExchangeRate.get(self.currency, to_currency)
+        return self.amount * rate

@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from factory import fuzzy, DjangoModelFactory
+from factory import fuzzy, DjangoModelFactory, SubFactory
 
-from billing_exness.billing.constants import EXCHANGE_CURRENCIES
-from billing_exness.billing.models import ExchangeRate
+from billing_exness.users.tests.factories import UserFactory
+from ..constants import CURRENCIES, EXCHANGE_CURRENCIES
+from ..models import (
+    ExchangeRate,
+    Wallet,
+)
 
 
 class ExchangeRateFactory(DjangoModelFactory):
@@ -12,3 +16,13 @@ class ExchangeRateFactory(DjangoModelFactory):
 
     class Meta:
         model = ExchangeRate
+
+
+class WalletFactory(DjangoModelFactory):
+    user = SubFactory(UserFactory)
+
+    amount = fuzzy.FuzzyDecimal(low=0.1, high=1000000)
+    currency = fuzzy.FuzzyChoice(CURRENCIES)
+
+    class Meta:
+        model = Wallet
