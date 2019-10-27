@@ -4,6 +4,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
+from rest_framework.schemas import get_schema_view
+
+from billing_exness.openapi.schema import BillingExnessSchemaGenerator
 
 urlpatterns = [
     path(
@@ -20,6 +23,23 @@ urlpatterns = [
     path("users/", include("billing_exness.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
+    path("api/v1/", include("billing_exness.api.v1.urls", namespace="api_v1")),
+    path(
+        "openapi/v1/",
+        TemplateView.as_view(template_name="swagger-ui.html")
+    ),
+    path(
+        "openapi/v1/schema/",
+        get_schema_view(
+            title="Billing Exness",
+            description="Test billing api",
+            version="1.0.0'",
+            url='/api/v1/',
+            urlconf='billing_exness.api.v1.urls',
+            generator_class=BillingExnessSchemaGenerator
+        ),
+        name='openapi_v1_schema'
+    )
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
