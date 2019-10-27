@@ -6,6 +6,8 @@ from django.views.generic import TemplateView
 from django.views import defaults as default_views
 from rest_framework.schemas import get_schema_view
 
+from billing_exness.openapi.schema import BillingExnessSchemaGenerator
+
 urlpatterns = [
     path(
         "",
@@ -33,7 +35,8 @@ urlpatterns = [
             description="Test billing api",
             version="1.0.0'",
             url='/api/v1/',
-            urlconf='billing_exness.api.v1.urls'
+            urlconf='billing_exness.api.v1.urls',
+            generator_class=BillingExnessSchemaGenerator
         ),
         name='openapi_v1_schema'
     )

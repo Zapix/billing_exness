@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
+from billing_exness.openapi.schema import SecurityRequiredSchema
 from .serializers import CreateUserSerializer, UserSerializer
 
 
@@ -24,3 +27,13 @@ class CreateUserApiView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+
+class UserMeApiView(generics.RetrieveAPIView):
+
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    schema = SecurityRequiredSchema()
+
+    def get_object(self):
+        return self.request.user

@@ -4,15 +4,16 @@ from django.shortcuts import reverse
 from rest_framework.test import APIClient
 
 from billing_exness.billing.constants import EUR
+from billing_exness.users.tests.factories import UserFactory
 pytestmark = pytest.mark.django_db
 
-client = APIClient()
 
 
 class TestCreateUserApi:
 
     @pytest.mark.watch
     def test_create_error(self):
+        client = APIClient()
         response = client.post(
             reverse('api_v1:users:create'),
             {
@@ -26,6 +27,7 @@ class TestCreateUserApi:
 
     @pytest.mark.watch
     def test_create_success(self):
+        client = APIClient()
         response = client.post(
             reverse('api_v1:users:create'),
             {
@@ -41,3 +43,23 @@ class TestCreateUserApi:
         assert 'password1' not in response.data
         assert 'password2' not in response.data
         assert 'currency' not in response.data
+
+
+class TestGetUserInfo:
+
+    @pytest.mark.watch
+    def test_permission_denied(self):
+        client = APIClient()
+        response = client.get(reverse('api_v1:users:me'))
+
+        assert response.status_code == 401
+
+    @pytest.mark.watch
+    def test_permission_succeeded(self):
+        user = UserFactory.create()
+        client = APIClient()
+        client.force_login(user)
+
+        response = client.get(reverse('api_v1:users:me'))
+
+        assert response.status_code == 200
