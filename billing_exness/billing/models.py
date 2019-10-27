@@ -14,6 +14,7 @@ from .constants import (
     EXCHANGE_CURRENCIES,
     CURRENCIES
 )
+from .exceptions import check_currency
 
 
 class ExchangeRate(TimeStampedModel):
@@ -29,7 +30,10 @@ class ExchangeRate(TimeStampedModel):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0"))]
     )
-    currency = StatusField(choices_name='EXCHANGE_CURRENCIES')
+    currency = StatusField(
+        choices_name='EXCHANGE_CURRENCIES',
+        db_index=True
+    )
 
     class Meta:
         ordering = ('-created', )
@@ -46,7 +50,7 @@ class ExchangeRate(TimeStampedModel):
         Returns
             Decimal - current rate
         """
-        assert currency in CURRENCIES
+        check_currency(currency)
 
         if currency == BASE_CURRENCY:
             return Decimal("1")
@@ -144,3 +148,8 @@ class Transaction(TimeStampedModel):
         decimal_places=2
     )
     currency = StatusField(choices_name='CURRENCIES')
+
+    class Meta:
+        index_together = [
+            ('from_wallet', 'to_wallet'),
+        ]
