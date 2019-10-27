@@ -79,5 +79,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
             currency=self.validated_data['currency']
         )
         user.wallet = wallet
+        user.save()
 
         return user
