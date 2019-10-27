@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.shortcuts import Http404
 
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework import generics
@@ -7,7 +8,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from billing_exness.openapi.schema import SecurityRequiredSchema
-from .serializers import CreateUserSerializer, UserSerializer
+from billing_exness.billing.models import Wallet
+from .serializers import (
+    CreateUserSerializer,
+    UserSerializer,
+    WalletSerializer
+)
 
 
 class CreateUserApiView(generics.CreateAPIView):
@@ -37,3 +43,16 @@ class UserMeApiView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class WalletApiView(generics.RetrieveAPIView):
+
+    serializer_class = WalletSerializer
+    permission_classes = [IsAuthenticated]
+    schema = SecurityRequiredSchema()
+
+    def get_object(self):
+        try:
+            return self.request.user.wallet
+        except Wallet.DoesNotExist:
+            raise Http404()

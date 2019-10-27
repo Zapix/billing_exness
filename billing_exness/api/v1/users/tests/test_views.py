@@ -5,13 +5,12 @@ from rest_framework.test import APIClient
 
 from billing_exness.billing.constants import EUR
 from billing_exness.users.tests.factories import UserFactory
+from billing_exness.billing.tests.factories import WalletFactory
 pytestmark = pytest.mark.django_db
-
 
 
 class TestCreateUserApi:
 
-    @pytest.mark.watch
     def test_create_error(self):
         client = APIClient()
         response = client.post(
@@ -25,7 +24,6 @@ class TestCreateUserApi:
         )
         assert response.status_code == 400
 
-    @pytest.mark.watch
     def test_create_success(self):
         client = APIClient()
         response = client.post(
@@ -47,19 +45,45 @@ class TestCreateUserApi:
 
 class TestGetUserInfo:
 
-    @pytest.mark.watch
     def test_permission_denied(self):
         client = APIClient()
         response = client.get(reverse('api_v1:users:me'))
 
         assert response.status_code == 401
 
-    @pytest.mark.watch
     def test_permission_succeeded(self):
         user = UserFactory.create()
         client = APIClient()
         client.force_login(user)
 
         response = client.get(reverse('api_v1:users:me'))
+
+        assert response.status_code == 200
+
+
+class TestUsersWallet:
+
+    def test_permission_denied(self):
+        client = APIClient()
+        response = client.get(reverse('api_v1:users:wallet'))
+
+        assert response.status_code == 401
+
+    def test_permission_without_wallet(self):
+        user = UserFactory.create()
+        client = APIClient()
+        client.force_login(user)
+
+        response = client.get(reverse('api_v1:users:wallet'))
+
+        assert response.status_code == 404
+
+    def test_user_with_wallet(self):
+        wallet = WalletFactory.create()
+        user = wallet.user
+        client = APIClient()
+        client.force_login(user)
+
+        response = client.get(reverse('api_v1:users:wallet'))
 
         assert response.status_code == 200

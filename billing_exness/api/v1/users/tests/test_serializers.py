@@ -10,7 +10,6 @@ pytestmark = pytest.mark.django_db
 
 class TestCreateUserSerializer:
 
-    @pytest.mark.watch
     def test_required_fields(self):
         serializer = CreateUserSerializer(data={})
 
@@ -18,7 +17,6 @@ class TestCreateUserSerializer:
         for field in ['username', 'currency', 'password1']:
             assert field in serializer.errors
 
-    @pytest.mark.watch
     def test_username_has_been_registerd_before(self):
         user = UserFactory.create()
         serializer = CreateUserSerializer(
@@ -29,7 +27,6 @@ class TestCreateUserSerializer:
         assert not serializer.is_valid()
         assert 'username' in serializer.errors
 
-    @pytest.mark.watch
     def test_password_do_not_match(self):
         serializer = CreateUserSerializer(
             data={
@@ -43,7 +40,6 @@ class TestCreateUserSerializer:
         assert not serializer.is_valid()
         assert 'non_field_errors' in serializer.errors, serializer.errors
 
-    @pytest.mark.watch
     def test_save_success(self):
         serializer = CreateUserSerializer(
             data={

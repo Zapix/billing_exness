@@ -94,7 +94,7 @@ class Wallet(TimeStampedModel):
     amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal("0"))]
+        validators=[MinValueValidator(0)]
     )
 
     def amount_in(self, to_currency: str) -> Decimal:

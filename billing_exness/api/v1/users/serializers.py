@@ -82,3 +82,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class WalletSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Wallet
+        fields = ['amount', 'currency']
