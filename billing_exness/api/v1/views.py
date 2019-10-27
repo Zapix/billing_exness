@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing import List
-
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.schemas.openapi import AutoSchema
 

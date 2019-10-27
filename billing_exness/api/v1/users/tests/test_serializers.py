@@ -2,7 +2,7 @@
 import pytest
 
 from billing_exness.users.tests.factories import UserFactory
-from billing_exness.billing.constants import USD, EUR
+from billing_exness.billing.constants import EUR
 from ..serializers import CreateUserSerializer
 
 pytestmark = pytest.mark.django_db

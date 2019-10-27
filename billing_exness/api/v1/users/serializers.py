@@ -18,6 +18,18 @@ def get_password_validator(validator_path: str) -> Callable:
     return lambda x: import_string(validator_path)().validate(password=x)
 
 
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'name',
+            'city',
+            'country'
+        ]
+
+
 class CreateUserSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(
         required=True,

@@ -21,7 +21,7 @@ urlpatterns = [
     path("users/", include("billing_exness.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    path("api/v1/", include("billing_exness.api.v1.urls")),
+    path("api/v1/", include("billing_exness.api.v1.urls", namespace="api_v1")),
     path(
         "openapi/v1/",
         TemplateView.as_view(template_name="swagger-ui.html")
