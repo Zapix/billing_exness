@@ -39,6 +39,13 @@ class TestCharge:
         with pytest.raises(AssertionError):
             charge(wallet, Decimal("100.0"), 'RUR')
 
+    def test_charge_negative_amount(self):
+        wallet = WalletFactory.create(
+            currency=USD
+        )
+        with pytest.raises(AssertionError):
+            charge(wallet, Decimal("-10"), USD)
+
     def test_charge_user_without_wallet(self):
         user = UserFactory.create()
         with pytest.raises(ValueError):

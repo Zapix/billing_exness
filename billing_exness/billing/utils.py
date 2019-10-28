@@ -43,12 +43,14 @@ def charge(
         amount - amount that should be charged
         currency - currency of amount
     Raises:
-        AssertionError - if wrong currency has been passed
+        AssertionError - if wrong currency has been passed, or not positive
+        amount has been passed
         ValueError - if user hasn`t got wallet
     Returns:
         `Wallet` - updated wallet
     """
     check_currency(currency)
+    assert amount > 0
 
     wallet = get_wallet(wallet)
 
