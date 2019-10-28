@@ -57,6 +57,11 @@ def charge(
     rate = ExchangeRate.get(currency, wallet.currency)
     wallet.amount += amount * rate
     wallet.save()
+    Transaction.objects.create(
+        amount=amount,
+        currency=currency,
+        to_wallet=wallet
+    )
 
     return wallet
 
