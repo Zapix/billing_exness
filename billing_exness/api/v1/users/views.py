@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.settings import api_settings
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_csv import renderers as r
 
 from billing_exness.openapi.schema import SecurityRequiredSchema
 from billing_exness.billing.models import Wallet, Transaction
@@ -19,6 +20,7 @@ from .serializers import (
     PaymentSerializer,
     TransactionSerializer
 )
+from .filters import TransactionFilter
 
 
 class CreateUserApiView(generics.CreateAPIView):
@@ -123,3 +125,17 @@ class PaymentApiView(generics.CreateAPIView):
                 status=status.HTTP_201_CREATED,
                 headers=headers
             )
+
+
+class TransactionListApiView(generics.ListAPIView):
+
+    serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+    schema = SecurityRequiredSchema()
+    filterset_class = TransactionFilter
+    renderer_classes = tuple(
+        api_settings.DEFAULT_RENDERER_CLASSES
+    ) + (r.CSVRenderer,)
+
+    def get_queryset(self):
+        return self.request.user.wallet.transactions
