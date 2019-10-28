@@ -43,7 +43,7 @@ class ExchangeRate(TimeStampedModel):
     def of(
         cls,
         currency: str,
-        as_object: bool=False
+        as_object: bool = False
     ) -> Union[Decimal, TimeStampedModel]:
         """
         Shows latest of 1 usd to `currency`
