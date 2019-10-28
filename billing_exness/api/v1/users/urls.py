@@ -6,6 +6,7 @@ from .views import (
     UserMeApiView,
     WalletApiView,
     PaymentApiView,
+    TransactionListApiView
 )
 
 app_name = 'users'
@@ -13,5 +14,7 @@ urlpatterns = [
     path("", CreateUserApiView.as_view(), name='create'),
     path("me/", UserMeApiView.as_view(), name='me'),
     path("me/wallet/", WalletApiView.as_view(), name="wallet"),
-    path("me/payment/", PaymentApiView.as_view(), name="payment")
+    path("me/payment/", PaymentApiView.as_view(), name="payment"),
+    path("me/transactions/", TransactionListApiView.as_view(),
+         name="transactions"),
 ]

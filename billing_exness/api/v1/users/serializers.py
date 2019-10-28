@@ -169,6 +169,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         source='to_wallet.user.username'
     )
     from_user = serializers.CharField(
+        required=False,
         source='from_wallet.user.username'
     )
 
