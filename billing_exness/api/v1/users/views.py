@@ -4,16 +4,20 @@ from django.shortcuts import Http404
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework import generics
 from rest_framework import status
+from rest_framework.settings import api_settings
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from billing_exness.openapi.schema import SecurityRequiredSchema
-from billing_exness.billing.models import Wallet
+from billing_exness.billing.models import Wallet, Transaction
+from billing_exness.billing.exceptions import NotEnoughMoneyException
 from .serializers import (
     CreateUserSerializer,
     UserSerializer,
     WalletSerializer,
-    ChargeSerializer
+    ChargeSerializer,
+    PaymentSerializer,
+    TransactionSerializer
 )
 
 
@@ -79,7 +83,7 @@ class WalletApiView(generics.RetrieveUpdateAPIView):
             super().update(request, *args, **kwargs)
         except ValueError as e:
             return Response(
-                data={'non_field_errors': str(e)},
+                data={api_settings.NON_FIELD_ERRORS_KEY: str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         wallet = self.get_object()
@@ -88,3 +92,34 @@ class WalletApiView(generics.RetrieveUpdateAPIView):
 
     def patch(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class PaymentApiView(generics.CreateAPIView):
+
+    serializer_class = PaymentSerializer
+    permission_classes = [
+        IsAuthenticated
+    ]
+    schema = SecurityRequiredSchema()
+
+    def perform_create(self, serializer: PaymentSerializer) -> Transaction:
+        return serializer.save(self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            transaction = self.perform_create(serializer)
+        except (ValueError, NotEnoughMoneyException) as e:
+            return Response(
+                {api_settings.NON_FIELD_ERRORS_KEY: str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            transaction_serializer = TransactionSerializer(transaction)
+            headers = self.get_success_headers(transaction_serializer.data)
+            return Response(
+                transaction_serializer.data,
+                status=status.HTTP_201_CREATED,
+                headers=headers
+            )
