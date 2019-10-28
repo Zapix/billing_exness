@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+from decimal import Decimal
+
 import pytest
 from django.shortcuts import reverse
 from rest_framework.test import APIClient
 
-from billing_exness.billing.constants import EUR
+from billing_exness.billing.constants import EUR, CAD
 from billing_exness.users.tests.factories import UserFactory
-from billing_exness.billing.tests.factories import WalletFactory
+from billing_exness.billing.tests.factories import (
+    WalletFactory,
+    ExchangeRateFactory
+)
 pytestmark = pytest.mark.django_db
 
 
@@ -87,3 +92,51 @@ class TestUsersWallet:
         response = client.get(reverse('api_v1:users:wallet'))
 
         assert response.status_code == 200
+
+    def test_wallet_charge_success(self):
+        ExchangeRateFactory.create(
+            rate=Decimal("2"),
+            currency=EUR
+        )
+        ExchangeRateFactory.create(
+            rate=Decimal("4"),
+            currency=CAD
+        )
+        wallet = WalletFactory.create(
+            amount=Decimal("10"),
+            currency=EUR
+        )
+        user = wallet.user
+
+        client = APIClient()
+        client.force_login(user)
+
+        response = client.put(
+            reverse('api_v1:users:wallet'),
+            {
+                'amount': 2,
+                'currency': CAD,
+            }
+        )
+        assert response.status_code == 200
+        assert response.data['amount'] == "11.00"
+        assert response.data['currency'] == EUR
+
+    def test_wallet_chrage_no_rate(self):
+        wallet = WalletFactory.create(
+            amount=Decimal("10"),
+            currency=EUR
+        )
+        user = wallet.user
+
+        client = APIClient()
+        client.force_login(user)
+
+        response = client.put(
+            reverse('api_v1:users:wallet'),
+            {
+                'amount': 2,
+                'currency': CAD,
+            }
+        )
+        assert response.status_code == 400

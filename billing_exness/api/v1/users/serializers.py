@@ -7,9 +7,11 @@ from django.conf import settings
 from django.utils.module_loading import import_string
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
+from django.core.validators import MinValueValidator
 
 from billing_exness.billing.constants import CURRENCIES
 from billing_exness.billing.models import Wallet
+from billing_exness.billing.utils import charge
 
 User = get_user_model()
 
@@ -89,3 +91,22 @@ class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = ['amount', 'currency']
+
+
+class ChargeSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        validators=[
+            MinValueValidator(0)
+        ]
+    )
+    currency = serializers.ChoiceField(choices=CURRENCIES)
+
+    def save(self, wallet: Wallet):
+        charge(
+            wallet,
+            self.validated_data['amount'],
+            self.validated_data['currency']
+        )

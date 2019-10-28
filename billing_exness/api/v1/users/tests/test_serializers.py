@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
+from decimal import Decimal
+
 import pytest
 
 from billing_exness.users.tests.factories import UserFactory
-from billing_exness.billing.constants import EUR
-from ..serializers import CreateUserSerializer
+from billing_exness.billing.tests.factories import (
+    WalletFactory,
+    ExchangeRateFactory
+)
+from billing_exness.billing.constants import EUR, USD
+from ..serializers import CreateUserSerializer, ChargeSerializer
 
 pytestmark = pytest.mark.django_db
 
@@ -56,3 +62,29 @@ class TestCreateUserSerializer:
 
         assert user.get_username() == 'veryuniquename'
         assert user.wallet.currency == EUR
+
+
+class TestChargeSerializer:
+
+    def test_serializer_save(self):
+        ExchangeRateFactory.create(
+            rate=Decimal("2"),
+            currency=EUR
+        )
+
+        wallet = WalletFactory.create(
+            amount=Decimal("1"),
+            currency=EUR
+        )
+        serializer = ChargeSerializer(data={
+            'amount': Decimal("10"),
+            'currency': USD
+        })
+
+        assert serializer.is_valid()
+        serializer.save(wallet)
+
+        wallet.refresh_from_db()
+
+        assert wallet.amount == Decimal("21")
+        assert wallet.currency == EUR

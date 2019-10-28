@@ -12,7 +12,8 @@ from billing_exness.billing.models import Wallet
 from .serializers import (
     CreateUserSerializer,
     UserSerializer,
-    WalletSerializer
+    WalletSerializer,
+    ChargeSerializer
 )
 
 
@@ -45,9 +46,10 @@ class UserMeApiView(generics.RetrieveAPIView):
         return self.request.user
 
 
-class WalletApiView(generics.RetrieveAPIView):
+class WalletApiView(generics.RetrieveUpdateAPIView):
 
     serializer_class = WalletSerializer
+    charge_serializer_class = ChargeSerializer
     permission_classes = [IsAuthenticated]
     schema = SecurityRequiredSchema()
 
@@ -56,3 +58,33 @@ class WalletApiView(generics.RetrieveAPIView):
             return self.request.user.wallet
         except Wallet.DoesNotExist:
             raise Http404()
+
+    def get_serializer(self, instance=None, data=None, **kwargs):
+        """
+        Uses ChargeSerializer if update data passes
+        """
+        if data is None:
+            return super().get_serializer(instance, **kwargs)
+        return self.charge_serializer_class(data=data, **kwargs)
+
+    def perform_update(self, serializer):
+        """
+        Charges users wallet
+        """
+        wallet = self.get_object()
+        serializer.save(wallet)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            super().update(request, *args, **kwargs)
+        except ValueError as e:
+            return Response(
+                data={'non_field_errors': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        wallet = self.get_object()
+        serializer = self.get_serializer(wallet)
+        return Response(serializer.data)
+
+    def patch(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
