@@ -162,3 +162,22 @@ class PaymentSerializer(serializers.Serializer):
             self.validated_data['amount'],
             self.validated_data['currency']
         )
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    to_username = serializers.CharField(
+        source='to_wallet.user.username'
+    )
+    from_username = serializers.CharField(
+        source='from_wallet.user.username'
+    )
+
+    class Meta:
+        model = Transaction
+        fields = ['to_username', 'amount', 'currency', 'from_username']
+        read_only_fields = [
+            'to_username',
+            'amount',
+            'currency',
+            'from_username'
+        ]
