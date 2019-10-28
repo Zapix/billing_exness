@@ -50,7 +50,8 @@ class ExchangeRate(TimeStampedModel):
         Params:
             currency - one of available currency
         Raises:
-            AssertionError - when wrong currency has been passed
+            AssertionError - when wrong currency has been passed,
+            or tried to return as object BASE_CURRENCY
             ValueError - when rate hasn`t been set
         Returns
             Decimal - current rate

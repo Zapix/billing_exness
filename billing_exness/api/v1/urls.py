@@ -7,4 +7,5 @@ app_name = 'api_v1'
 urlpatterns = [
     path('auth/', ObtainAuthTokenWithInfo.as_view(), name='auth'),
     path('users/', include('billing_exness.api.v1.users.urls')),
+    path('exchange/', include('billing_exness.api.v1.exchange.urls')),
 ]

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import Optional
 from rest_framework import serializers
 
 from billing_exness.billing.models import ExchangeRate
@@ -15,9 +16,10 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
     def __init__(
         self,
         instance: ExchangeRate = None,
-        currency: str = None,
+        currency: Optional[str] = None,
         **kwargs
     ):
+        assert currency is not None
         check_currency(currency)
 
         if instance is not None:
