@@ -242,3 +242,20 @@ class TestMakePayment:
         to_wallet.refresh_from_db()
         assert to_wallet.amount == Decimal("5")
         assert to_wallet.currency == CAD
+
+    def test_negative_amount(self):
+        ExchangeRateFactory.create(
+            rate=Decimal("2"),
+            currency=EUR
+        )
+        from_wallet = WalletFactory.create(
+            amount=Decimal("10"),
+            currency=EUR,
+        )
+        to_wallet = WalletFactory.create(
+            amount=Decimal("1"),
+            currency=EUR
+        )
+
+        with pytest.raises(AssertionError):
+            make_payment(from_wallet, to_wallet, Decimal("-4"), EUR)

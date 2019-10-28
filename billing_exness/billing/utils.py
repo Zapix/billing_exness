@@ -86,6 +86,7 @@ def make_payment(
         `Transaction` - object of current transaction
     """
     check_currency(currency)
+    assert amount > 0
 
     from_wallet = get_wallet(from_wallet)
     to_wallet = get_wallet(to_wallet)
