@@ -1,3 +1,4 @@
+from typing import Union
 from decimal import Decimal
 
 from django.db import models
@@ -28,7 +29,7 @@ class ExchangeRate(TimeStampedModel):
     rate = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal("0"))]
+        validators=[MinValueValidator(0)]
     )
     currency = StatusField(
         choices_name='EXCHANGE_CURRENCIES',
@@ -39,13 +40,18 @@ class ExchangeRate(TimeStampedModel):
         ordering = ('-created', )
 
     @classmethod
-    def of(cls, currency: str) -> Decimal:
+    def of(
+        cls,
+        currency: str,
+        as_object: bool = False
+    ) -> Union[Decimal, TimeStampedModel]:
         """
         Shows latest of 1 usd to `currency`
         Params:
             currency - one of available currency
         Raises:
-            AssertionError - when wrong currency has been passed
+            AssertionError - when wrong currency has been passed,
+            or tried to return as object BASE_CURRENCY
             ValueError - when rate hasn`t been set
         Returns
             Decimal - current rate
@@ -53,6 +59,7 @@ class ExchangeRate(TimeStampedModel):
         check_currency(currency)
 
         if currency == BASE_CURRENCY:
+            assert not as_object
             return Decimal("1")
 
         latest = cls.objects.filter(currency=currency).first()
@@ -60,7 +67,7 @@ class ExchangeRate(TimeStampedModel):
         if latest is None:
             raise ValueError(f"Rate for {currency} hasn`t been set")
 
-        return latest.rate
+        return latest if as_object else latest.rate
 
     @classmethod
     def get(cls, from_currency: str, to_currency: str) -> Decimal:
