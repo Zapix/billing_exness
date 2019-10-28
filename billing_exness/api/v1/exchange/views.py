@@ -21,7 +21,6 @@ class ExchangeRateApiView(generics.RetrieveUpdateAPIView):
     update_permission_classes = [permissions.IsAdminUser]
     schema = SecurityRequiredSchema()
 
-
     def get_permissions(self):
         if self.request.method == 'GET':
             return super().get_permissions()
