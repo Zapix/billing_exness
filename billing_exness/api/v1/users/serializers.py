@@ -10,8 +10,8 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.core.validators import MinValueValidator
 
 from billing_exness.billing.constants import CURRENCIES
-from billing_exness.billing.models import Wallet
-from billing_exness.billing.utils import charge
+from billing_exness.billing.models import Wallet, Transaction
+from billing_exness.billing.utils import charge, make_payment
 
 User = get_user_model()
 
@@ -102,11 +102,88 @@ class ChargeSerializer(serializers.Serializer):
             MinValueValidator(0)
         ]
     )
-    currency = serializers.ChoiceField(choices=CURRENCIES)
+    currency = serializers.ChoiceField(
+        choices=CURRENCIES,
+        required=True
+    )
 
     def save(self, wallet: Wallet):
+        assert hasattr(self, '_errors'), (
+            'You must call `.is_valid()` before calling `.save()`.'
+        )
+
+        assert not self.errors, (
+            'You cannot call `.save()` on a serializer with invalid data.'
+        )
+
         charge(
             wallet,
             self.validated_data['amount'],
             self.validated_data['currency']
         )
+
+
+class PaymentSerializer(serializers.Serializer):
+    """
+    Allow make payment to user
+    """
+
+    to_user = serializers.ModelField(
+        model_field=User()._meta.get_field('username')
+    )
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        validators=[
+            MinValueValidator(0)
+        ],
+    )
+    currency = serializers.ChoiceField(
+        choices=CURRENCIES,
+        required=True
+    )
+
+    def save(self, from_user: AbstractBaseUser) -> Transaction:
+        """
+        Makes payment from user
+        """
+        assert hasattr(self, '_errors'), (
+            'You must call `.is_valid()` before calling `.save()`.'
+        )
+
+        assert not self.errors, (
+            'You cannot call `.save()` on a serializer with invalid data.'
+        )
+
+        return make_payment(
+            from_user,
+            User.objects.get(username=self.validated_data['to_user']),
+            self.validated_data['amount'],
+            self.validated_data['currency']
+        )
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    to_user = serializers.CharField(
+        source='to_wallet.user.username'
+    )
+    from_user = serializers.CharField(
+        source='from_wallet.user.username'
+    )
+
+    class Meta:
+        model = Transaction
+        fields = [
+            'to_user',
+            'amount',
+            'currency',
+            'from_user',
+            'created'
+        ]
+        read_only_fields = [
+            'to_user',
+            'amount',
+            'currency',
+            'from_user'
+        ]

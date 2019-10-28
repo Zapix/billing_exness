@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 from django.shortcuts import reverse
 from rest_framework.test import APIClient
+from rest_framework.settings import api_settings
 
 from billing_exness.billing.constants import EUR, CAD
 from billing_exness.users.tests.factories import UserFactory
@@ -140,3 +141,105 @@ class TestUsersWallet:
             }
         )
         assert response.status_code == 400
+
+
+class TestPaymentApiView:
+
+    def test_payment_user_without_wallet(self):
+        ExchangeRateFactory.create(
+            rate=Decimal("2"),
+            currency=EUR
+        )
+        from_user = UserFactory.create()
+
+        to_wallet = WalletFactory.create(
+            amount=Decimal("100"),
+            currency=EUR
+        )
+        to_user = to_wallet.user
+
+        client = APIClient()
+        client.force_login(from_user)
+        response = client.post(
+            reverse('api_v1:users:payment'),
+            {
+                'to_user': to_user.get_username(),
+                'amount': 5,
+                'currency': EUR,
+            }
+        )
+
+        assert response.status_code == 400
+        assert api_settings.NON_FIELD_ERRORS_KEY in response.data
+
+    def test_payment_not_enough_money(self):
+        ExchangeRateFactory.create(
+            rate=Decimal("2"),
+            currency=EUR
+        )
+        from_wallet = WalletFactory.create(
+            amount=Decimal("1"),
+            currency=EUR
+        )
+        from_user = from_wallet.user
+
+        to_wallet = WalletFactory.create(
+            amount=Decimal("100"),
+            currency=EUR
+        )
+        to_user = to_wallet.user
+
+        client = APIClient()
+        client.force_login(from_user)
+        response = client.post(
+            reverse('api_v1:users:payment'),
+            {
+                'to_user': to_user.get_username(),
+                'amount': 5,
+                'currency': EUR,
+            }
+        )
+
+        assert response.status_code == 400
+        assert api_settings.NON_FIELD_ERRORS_KEY in response.data
+
+    def test_payment_success(self):
+        ExchangeRateFactory.create(
+            rate=Decimal("2"),
+            currency=EUR
+        )
+        from_wallet = WalletFactory.create(
+            amount=Decimal("100"),
+            currency=EUR
+        )
+        from_user = from_wallet.user
+
+        to_wallet = WalletFactory.create(
+            amount=Decimal("100"),
+            currency=EUR
+        )
+        to_user = to_wallet.user
+
+        client = APIClient()
+        client.force_login(from_user)
+        response = client.post(
+            reverse('api_v1:users:payment'),
+            {
+                'to_user': to_user.get_username(),
+                'amount': 5,
+                'currency': EUR,
+            }
+        )
+
+        assert response.status_code == 201
+
+        fields = [
+            'to_user',
+            'amount',
+            'currency',
+            'from_user',
+            'created'
+        ]
+
+        for field in fields:
+            assert field in response.data
