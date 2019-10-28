@@ -157,6 +157,7 @@ class Transaction(TimeStampedModel):
     currency = StatusField(choices_name='CURRENCIES')
 
     class Meta:
+        ordering = ('-created', )
         index_together = [
             ('from_wallet', 'to_wallet'),
         ]

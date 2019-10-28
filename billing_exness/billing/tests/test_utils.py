@@ -63,6 +63,10 @@ class TestCharge:
         updated_wallet = charge(wallet, Decimal("50"), EUR)
         assert updated_wallet.amount == Decimal("150")
 
+        transaction = updated_wallet.transactions.first()
+        assert transaction.amount == Decimal("50")
+        assert transaction.currency == EUR
+
     def test_charge_wallet_with_cad_by_eur(self):
         ExchangeRateFactory.create(
             rate=Decimal("2"),
