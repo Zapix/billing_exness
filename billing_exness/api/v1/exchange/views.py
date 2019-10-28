@@ -7,7 +7,9 @@ from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.response import Response
 
+from billing_exness.billing.constants import EUR
 from billing_exness.billing.models import ExchangeRate
+from billing_exness.openapi.schema import SecurityRequiredSchema
 from .serializers import ExchangeRateSerializer
 
 
@@ -17,6 +19,8 @@ class ExchangeRateApiView(generics.RetrieveUpdateAPIView):
     """
     serializer_class = ExchangeRateSerializer
     update_permission_classes = [permissions.IsAdminUser]
+    schema = SecurityRequiredSchema()
+
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -26,7 +30,8 @@ class ExchangeRateApiView(generics.RetrieveUpdateAPIView):
     def get_serializer(self, *args, **kwargs) -> ExchangeRateSerializer:
         serializer_class = self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()
-        kwargs['currency'] = self.kwargs['currency'].upper()
+        # set default ad EUR to support schema generation
+        kwargs['currency'] = self.kwargs.get('currency', EUR)
 
         return serializer_class(*args, **kwargs)
 

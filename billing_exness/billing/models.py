@@ -29,7 +29,7 @@ class ExchangeRate(TimeStampedModel):
     rate = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal("0"))]
+        validators=[MinValueValidator(0)]
     )
     currency = StatusField(
         choices_name='EXCHANGE_CURRENCIES',
