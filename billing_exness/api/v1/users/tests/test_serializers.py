@@ -66,7 +66,6 @@ class TestCreateUserSerializer:
 
 class TestChargeSerializer:
 
-    @pytest.mark.watch
     def test_serializer_save(self):
         ExchangeRateFactory.create(
             rate=Decimal("2"),
