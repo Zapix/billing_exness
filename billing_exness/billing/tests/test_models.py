@@ -43,6 +43,20 @@ class TestExchangeRate:
 
         assert ExchangeRate.of(CAD) == latest.rate
 
+    def test_exchange_rate_as_object_usd(self):
+        with pytest.raises(AssertionError):
+            ExchangeRate.of(USD, as_object=True)
+
+    def test_exchange_rate_as_object(self):
+        rate = ExchangeRateFactory.create(
+            rate=Decimal("1.1"),
+            currency=CAD
+        )
+
+        exchange_rate = ExchangeRate.of(CAD, as_object=True)
+        assert isinstance(exchange_rate, ExchangeRate)
+        assert rate.pk == exchange_rate.pk
+
 
 class TestWallet:
 
